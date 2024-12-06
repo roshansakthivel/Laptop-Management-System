@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" 
+  url      = env("DATABASE_URL") 
+}
+
+model Laptop {
+  id           Int           @id @default(autoincrement())
+  brand        String
+  model        String
+  serialNumber String         @unique
+  status       LaptopStatus   @default(AVAILABLE)
+  purchaseDate DateTime
+  assignments  Assignment[]
+  maintenance  Maintenance[]
+  issues       Issue[]
+}
+
+model Employee {
+  id         Int          @id @default(autoincrement())
+  name       String
+  password   String
+  email      String       @unique
+  department String
+  role       Role         @default(EMPLOYEE) 
+  assignments Assignment[]
+  requests    LaptopRequest[]
+  issues      Issue[]
+}
+
+model Assignment {
+  id         Int       @id @default(autoincrement())
+  laptopId   Int
+  employeeId Int
+  assignedAt DateTime
+  returnedAt DateTime?
+
+  laptop   Laptop   @relation(fields: [laptopId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Maintenance {
+  id          Int       @id @default(autoincrement())
+  laptopId    Int
+  description String
+  status      LaptopStatus @default(AVAILABLE)
+  cost        Float
+  loggedAt    DateTime
+
+  laptop Laptop @relation(fields: [laptopId], references: [id])
+}
+
+model Issue {
+  id          Int       @id @default(autoincrement())
+  laptopId    Int
+  employeeId  Int       
+  description String
+  priority    IssuePriority
+  status      LaptopStatus   
+  reportedAt  DateTime
+
+  laptop   Laptop   @relation(fields: [laptopId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model LaptopRequest {
+  id          Int       @id @default(autoincrement())
+  employeeId  Int
+  description String
+  requestedAt DateTime  @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+enum LaptopStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+}
